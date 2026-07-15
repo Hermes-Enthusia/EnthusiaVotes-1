@@ -31,6 +31,7 @@ dependencies {
     implementation("com.github.BadgersMC.Nexus:nexus-persistence:v2.1.1")
     implementation("com.github.BadgersMC.Nexus:nexus-scheduler:v2.1.1")
     implementation("com.github.BadgersMC.Nexus:nexus-paper-loader:v2.1.1")
+    implementation("com.github.BadgersMC.Nexus:nexus-i18n:v2.1.1")
 
     // NuVotifier API (provided by server)
     compileOnly(files("libs/nuvotifier-api.jar"))

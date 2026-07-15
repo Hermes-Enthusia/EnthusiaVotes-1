@@ -1,30 +1,22 @@
 package net.badgersmc.votes.application
 
+import net.badgersmc.nexus.i18n.LangService
 import net.badgersmc.votes.infrastructure.config.VoteConfig
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.JoinConfiguration
-import net.kyori.adventure.text.minimessage.MiniMessage
 
 class VoteSitesCommand(
     private val voteConfig: VoteConfig,
+    private val lang: LangService,
 ) {
-    private val mm = MiniMessage.miniMessage()
-
     fun execute(): Component {
         val lines = mutableListOf(
-            mm.deserialize(
-                "<shadow:#000000:1><gold>▶</gold> <yellow>Vote for us!</yellow></shadow>"
-            ),
+            lang.msg("votesites.header"),
         )
 
         for (site in voteConfig.voteSites) {
-            val safeName = mm.escapeTags(site.name)
-            val safeUrl = mm.escapeTags(site.url)
             lines.add(
-                mm.deserialize(
-                    "<shadow:#000000:1> <gold>▶</gold> <aqua>$safeName</aqua> <gray>- " +
-                    "<click:open_url:'$safeUrl'>Click to vote!</click></gray></shadow>"
-                )
+                lang.msg("votesites.site_entry", "name" to site.name, "url" to site.url)
             )
         }
 

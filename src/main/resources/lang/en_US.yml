@@ -1,0 +1,49 @@
+# EnthusiaVotes — en_US locale.
+#
+# All values are MiniMessage strings. See https://docs.advntr.dev/minimessage/format.html
+# Placeholders use <name> syntax and are populated at call site, e.g. <player>, <total>.
+#
+# Bedrock/Cumulus paths render these to legacy §-codes via LegacyComponentSerializer.
+
+prefix: "<gradient:#FF7272:#FFC976><shadow:#000000:1>[Vot</shadow></gradient><#FFC976><shadow:#000000:1>es]</shadow></#FFC976> "
+
+vote:
+  stats:
+    header: "<shadow:#000000:1><gold>▶</gold> <yellow>Your Vote Stats, <player></yellow></shadow>"
+    total: "<shadow:#000000:1> <gray>Total Votes:</gray> <white><total></white></shadow>"
+    streak: "<shadow:#000000:1> <gray>Current Streak:</gray> <white><streak></white></shadow>"
+    best: "<shadow:#000000:1> <gray>Best Streak:</gray> <white><best></white></shadow>"
+    empty_separator: "<shadow:#000000:1></shadow>"
+    site_header: "<shadow:#000000:1><gold>▶</gold> <yellow>Vote Sites</yellow></shadow>"
+    site_entry: "<shadow:#000000:1> <gold>▶</gold> <aqua><name></aqua> <gray>- <click:open_url:'<url>'>Click to vote!</click></gray></shadow>"
+
+votesites:
+  header: "<shadow:#000000:1><gold>▶</gold> <yellow>Vote for us!</yellow></shadow>"
+  site_entry: "<shadow:#000000:1> <gold>▶</gold> <aqua><name></aqua> <gray>- <click:open_url:'<url>'>Click to vote!</click></gray></shadow>"
+
+admin:
+  header: "<shadow:#000000:1><gold>=== EnthusiaVotes Admin ===</gold></shadow>"
+  unknown_subcommand: "<red>Unknown subcommand. Use forceparty, stats, or reload.</red>"
+  forceparty:
+    success: "<shadow:#000000:1><green>Vote Party manually activated!</green></shadow>"
+  stats:
+    total: "<shadow:#000000:1> <gray>Total Server Votes:</gray> <white><total></white></shadow>"
+    no_votes: "<shadow:#000000:1> <gray>No votes yet.</gray></shadow>"
+    top_header: "<shadow:#000000:1><gold>Top Voters:</gold></shadow>"
+    top_entry: "<shadow:#000000:1> <gray><rank>.</gray> <white><uuid>...</white> <gray><votes> votes (streak: <streak>)</gray></shadow>"
+  party:
+    active: "<shadow:#000000:1><gold>Vote Party is <green>ACTIVE</green>!</gold> Gold rewards are doubled!</shadow>"
+    inactive: "<shadow:#000000:1><gold>Vote Party Status</gold>: <gray><current>/<threshold> votes (<remaining> to go)</gray></shadow>"
+
+voteparty:
+  broadcast: "<shadow:#000000:1><gradient:gold:yellow>VOTE PARTY!</gradient> Gold rewards are now <gold>doubled</gold> for <aqua><minutes> minutes</aqua>!</shadow>"
+  reward_message: "<shadow:#000000:1><yellow><player></yellow> voted on <aqua><service></aqua> and received <gold><gold> Raw Gold</gold><streak_text>!</shadow>"
+
+bedrock:
+  form:
+    title: "Vote for EnthusiaSMP!"
+    content: "Your Stats:\n  Total Votes: <total>\n  Current Streak: <streak>\n  Best Streak: <best>\n\nTap a site below to get the link.\n(Bedrock can't open links — copy it!)"
+    link_message: "<shadow:#000000:1><gold><name>:</gold> <white><url></white></shadow>"
+
+error:
+  players_only: "<red>Only players can use this command.</red>"

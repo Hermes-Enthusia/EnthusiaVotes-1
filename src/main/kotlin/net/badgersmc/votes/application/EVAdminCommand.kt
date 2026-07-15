@@ -1,23 +1,18 @@
 package net.badgersmc.votes.application
 
+import net.badgersmc.nexus.i18n.LangService
 import net.badgersmc.votes.domain.VotePartyState
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.JoinConfiguration
-import net.kyori.adventure.text.minimessage.MiniMessage
 import java.util.UUID
 
 class EVAdminCommand(
     private val votePartyService: VotePartyService,
     private val voteRepository: VoteRepository,
+    private val lang: LangService,
 ) {
-    private val mm = MiniMessage.miniMessage()
-
-    private val header = mm.deserialize(
-        "<shadow:#000000:1><gold>=== EnthusiaVotes Admin ===</gold></shadow>"
-    )
-    private val unknown = mm.deserialize(
-        "<red>Unknown subcommand. Use forceparty, stats, or reload.</red>"
-    )
+    private val header = lang.msg("admin.header")
+    private val unknown = lang.msg("admin.unknown_subcommand")
 
     fun execute(playerName: String, playerUuid: UUID, args: List<String>): Component {
         if (args.isEmpty()) return unknown
@@ -31,32 +26,29 @@ class EVAdminCommand(
 
     private fun forceParty(): Component {
         votePartyService.activate()
-        return mm.deserialize(
-            "<shadow:#000000:1><green>Vote Party manually activated!</green></shadow>"
-        )
+        return lang.msg("admin.forceparty.success")
     }
 
     private fun serverStats(): Component {
-        val totalVotes = voteRepository.getTotalServerVotes()
+        val totalVotes = voteRepository.getTotalServerVotes().toString()
         val topVoters = voteRepository.getTopVoters(5)
 
         val lines = mutableListOf(header)
-        lines.add(
-            mm.deserialize(
-                "<shadow:#000000:1> <gray>Total Server Votes:</gray> <white>$totalVotes</white></shadow>"
-            )
-        )
+        lines.add(lang.msg("admin.stats.total", "total" to totalVotes))
 
         if (topVoters.isEmpty()) {
-            lines.add(mm.deserialize("<shadow:#000000:1> <gray>No votes yet.</gray></shadow>"))
+            lines.add(lang.msg("admin.stats.no_votes"))
         } else {
-            lines.add(mm.deserialize("<shadow:#000000:1><gold>Top Voters:</gold></shadow>"))
+            lines.add(lang.msg("admin.stats.top_header"))
             for ((i, stats) in topVoters.withIndex()) {
-                val safe = mm.escapeTags(stats.playerUuid.toString().take(8))
+                val uuidPrefix = stats.playerUuid.toString().take(8)
                 lines.add(
-                    mm.deserialize(
-                        "<shadow:#000000:1> <gray>${i + 1}.</gray> <white>$safe...</white>" +
-                        " <gray>${stats.totalVotes} votes (streak: ${stats.currentStreak})</gray></shadow>"
+                    lang.msg(
+                        "admin.stats.top_entry",
+                        "rank" to (i + 1).toString(),
+                        "uuid" to uuidPrefix,
+                        "votes" to stats.totalVotes.toString(),
+                        "streak" to stats.currentStreak.toString(),
                     )
                 )
             }
@@ -67,17 +59,13 @@ class EVAdminCommand(
 
     private fun partyStatus(): Component {
         val state = votePartyService.getState()
-        val safeCurrent = mm.escapeTags(state.currentVotes.toString())
-        val safeThreshold = mm.escapeTags(state.threshold.toString())
-        val remaining = state.threshold - state.currentVotes
-        return mm.deserialize(
-            if (state.active) {
-                "<shadow:#000000:1><gold>Vote Party is <green>ACTIVE</green>!</gold> " +
-                "Gold rewards are doubled!</shadow>"
-            } else {
-                "<shadow:#000000:1><gold>Vote Party Status</gold>: " +
-                "<gray>$safeCurrent/$safeThreshold votes ($remaining to go)</gray></shadow>"
-            }
-        )
+        if (state.active) {
+            return lang.msg("admin.party.active")
+        } else {
+            val current = state.currentVotes.toString()
+            val threshold = state.threshold.toString()
+            val remaining = (state.threshold - state.currentVotes).toString()
+            return lang.msg("admin.party.inactive", "current" to current, "threshold" to threshold, "remaining" to remaining)
+        }
     }
 }

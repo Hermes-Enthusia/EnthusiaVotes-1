@@ -1,5 +1,7 @@
 package net.badgersmc.votes.infrastructure.di
 
+import net.badgersmc.nexus.i18n.LangService
+import net.badgersmc.nexus.i18n.Locale
 import net.badgersmc.nexus.scheduler.NexusScheduler
 import net.badgersmc.votes.application.*
 import net.badgersmc.votes.infrastructure.bukkit.BukkitGoldDelivery
@@ -8,6 +10,7 @@ import net.badgersmc.votes.infrastructure.bukkit.ProxiedDeliveryService
 import net.badgersmc.votes.infrastructure.bukkit.VotifierVoteListener
 import net.badgersmc.votes.infrastructure.config.VoteConfig
 import net.badgersmc.votes.infrastructure.form.BedrockVoteForm
+import net.badgersmc.votes.infrastructure.i18n.EnthusiaVotesLang
 import net.badgersmc.votes.infrastructure.messaging.BukkitVoteBroadcaster
 import net.badgersmc.votes.infrastructure.papi.EnthusiaVotesExpansion
 import net.badgersmc.votes.infrastructure.persistence.DatabaseFactory
@@ -64,8 +67,12 @@ class ServiceModule(
         VoteScheduler(plugin, votePartyService, voteConfig)
     }
 
+    val lang: LangService by lazy {
+        LangService(plugin, Locale("en_US"), EnthusiaVotesLang::class.java)
+    }
+
     val rewardService: RewardService by lazy {
-        RewardService(voteConfig, votePartyService)
+        RewardService(voteConfig, votePartyService, lang)
     }
 
     val voteBroadcaster: VoteBroadcaster by lazy {
@@ -77,16 +84,16 @@ class ServiceModule(
     }
 
     val voteService: VoteService by lazy {
-        VoteService(voteRepository, rewardService, voteBroadcaster, goldDelivery, votePartyService, voteConfig)
+        VoteService(voteRepository, rewardService, voteBroadcaster, goldDelivery, votePartyService, voteConfig, lang)
     }
 
     val bedrockVoteForm: BedrockVoteForm by lazy {
-        BedrockVoteForm(voteRepository, voteConfig, plugin.logger)
+        BedrockVoteForm(voteRepository, voteConfig, plugin.logger, lang)
     }
 
-    val voteCommand: VoteCommand by lazy { VoteCommand(voteRepository, voteConfig) }
-    val voteSitesCommand: VoteSitesCommand by lazy { VoteSitesCommand(voteConfig) }
-    val evAdminCommand: EVAdminCommand by lazy { EVAdminCommand(votePartyService, voteRepository) }
+    val voteCommand: VoteCommand by lazy { VoteCommand(voteRepository, voteConfig, lang) }
+    val voteSitesCommand: VoteSitesCommand by lazy { VoteSitesCommand(voteConfig, lang) }
+    val evAdminCommand: EVAdminCommand by lazy { EVAdminCommand(votePartyService, voteRepository, lang) }
 
     val voteListener: VotifierVoteListener by lazy {
         VotifierVoteListener(voteService)

@@ -1,5 +1,6 @@
 package net.badgersmc.votes.infrastructure.form
 
+import net.badgersmc.nexus.i18n.LangService
 import net.badgersmc.votes.application.VoteRepository
 import net.badgersmc.votes.infrastructure.config.VoteConfig
 import org.bukkit.entity.Player
@@ -12,6 +13,7 @@ class BedrockVoteForm(
     private val voteRepository: VoteRepository,
     private val voteConfig: VoteConfig,
     private val logger: Logger,
+    private val lang: LangService,
 ) {
     companion object {
         fun isBedrockPlayer(player: Player): Boolean {
@@ -26,14 +28,14 @@ class BedrockVoteForm(
     fun open(player: Player) {
         val stats = voteRepository.getStats(player.uniqueId)
         val form = SimpleForm.builder()
-            .title("Vote for EnthusiaSMP!")
+            .title(lang.raw("bedrock.form.title"))
             .content(
-                "Your Stats:\n" +
-                "  Total Votes: ${stats.totalVotes}\n" +
-                "  Current Streak: ${stats.currentStreak}\n" +
-                "  Best Streak: ${stats.bestStreak}\n\n" +
-                "Tap a site below to get the link.\n" +
-                "(Bedrock can't open links — copy it!)"
+                lang.legacy(
+                    "bedrock.form.content",
+                    "total" to stats.totalVotes.toString(),
+                    "streak" to stats.currentStreak.toString(),
+                    "best" to stats.bestStreak.toString(),
+                )
             )
 
         for (site in voteConfig.voteSites) {
@@ -45,9 +47,7 @@ class BedrockVoteForm(
             val index = response.clickedButtonId()
             if (index < voteConfig.voteSites.size) {
                 val site = voteConfig.voteSites[index]
-                player.sendRichMessage(
-                    "<shadow:#000000:1><gold>${site.name}:</gold> <white>${site.url}</white></shadow>"
-                )
+                player.sendMessage(lang.msg("bedrock.form.link_message", "name" to site.name, "url" to site.url))
             }
         }
 
