@@ -10,6 +10,7 @@ import java.time.Instant
 class VotePartyService(
     private val config: VoteConfig,
     private val plugin: EnthusiaVotesPlugin,
+    private val voteRepository: VoteRepository,
     private val speaker: VotePartySpeaker? = null,
 ) {
     @Volatile
@@ -32,6 +33,15 @@ class VotePartyService(
     fun getVotesNeeded(): Int = config.votePartyThreshold
 
     fun getRemainingVotes(): Int = (config.votePartyThreshold - currentVotes).coerceAtLeast(0)
+
+    /**
+     * Restores party state from a previously persisted snapshot (e.g., after server restart).
+     */
+    fun loadFrom(partyState: VotePartyState) {
+        _active = partyState.active
+        currentVotes = partyState.currentVotes
+        _startedAt = partyState.startedAt
+    }
 
     /**
      * Increments the vote counter. If the threshold is reached and the party isn't active,
@@ -60,6 +70,7 @@ class VotePartyService(
             )
         }
 
+        persist()
         return VotePartyState(
             active = false,
             currentVotes = currentVotes,
@@ -73,6 +84,7 @@ class VotePartyService(
         currentVotes = 0
         _startedAt = Instant.now()
         speaker?.onPartyActivated()
+        persist()
 
         val duration = Duration.ofMinutes(config.votePartyDurationMinutes.toLong())
         val ticks = duration.seconds * 20
@@ -89,6 +101,7 @@ class VotePartyService(
         _startedAt = null
         partyTask = null
         speaker?.onPartyDeactivated()
+        persist()
     }
 
     fun getState(): VotePartyState = VotePartyState(
@@ -96,5 +109,10 @@ class VotePartyService(
         currentVotes = currentVotes,
         threshold = config.votePartyThreshold,
         justActivated = false,
+        startedAt = _startedAt,
     )
+
+    private fun persist() {
+        voteRepository.savePartyState(getState())
+    }
 }

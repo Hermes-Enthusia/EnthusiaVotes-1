@@ -80,6 +80,21 @@ object PlayerStatsTable : Table("player_stats") {
     override val primaryKey = PrimaryKey(playerUuid)
 }
 
+object OfflineVoteTable : Table("offline_votes") {
+    val playerUuid = text("player_uuid")
+    val gold = integer("gold")
+    val createdAt = long("created_at")
+
+    override val primaryKey = PrimaryKey(playerUuid)
+}
+
+object VotePartyTable : Table("vote_party") {
+    val active = bool("active")
+    val currentVotes = integer("current_votes")
+    val threshold = integer("threshold")
+    val startedAt = long("started_at").nullable()
+}
+
 object Migrations {
     fun run() {
         DatabaseFactory::class.java // forces lazy init check

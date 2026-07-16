@@ -49,7 +49,14 @@ class EnthusiaVotesPlugin : JavaPlugin() {
             EVAdminBukkitCommand(services.evAdminCommand),
         )
 
+        server.commandMap.register(
+            "votetop",
+            VoteTopBukkitCommand(services.voteTopCommand, services.lang),
+        )
+
         server.pluginManager.registerEvents(services.voteListener, this)
+        server.pluginManager.registerEvents(services.voteSignListener, this)
+        server.pluginManager.registerEvents(services.offlineVoteLoginListener, this)
 
         // Register PlaceholderAPI expansion if PAPI is present
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
@@ -58,6 +65,9 @@ class EnthusiaVotesPlugin : JavaPlugin() {
         }
 
         services.scheduler.start()
+
+        // Resume active VoteParty from DB if server restarted mid-party
+        services.resumeGiveawaysOnStartup()
 
         logger.info("EnthusiaVotes enabled.")
     }

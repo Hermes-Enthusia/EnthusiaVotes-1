@@ -6,7 +6,10 @@ import net.badgersmc.nexus.scheduler.NexusScheduler
 import net.badgersmc.votes.application.*
 import net.badgersmc.votes.infrastructure.bukkit.BukkitGoldDelivery
 import net.badgersmc.votes.infrastructure.bukkit.EnthusiaVotesPlugin
+import net.badgersmc.votes.infrastructure.bukkit.OfflineVoteLoginListener
 import net.badgersmc.votes.infrastructure.bukkit.ProxiedDeliveryService
+import net.badgersmc.votes.infrastructure.bukkit.VoteReminder
+import net.badgersmc.votes.infrastructure.bukkit.VoteSignListener
 import net.badgersmc.votes.infrastructure.bukkit.VotifierVoteListener
 import net.badgersmc.votes.infrastructure.config.VoteConfig
 import net.badgersmc.votes.infrastructure.form.BedrockVoteForm
@@ -21,6 +24,7 @@ class VoteScheduler(
     private val plugin: EnthusiaVotesPlugin,
     private val votePartyService: VotePartyService,
     private val config: VoteConfig,
+    private val voteReminder: VoteReminder,
 ) {
     fun start() {
         if (votePartyService.isPartyActive()) {
@@ -32,10 +36,20 @@ class VoteScheduler(
                 ticks,
             )
         }
+        // Start repeating reminder — every 5 minutes
+        val reminderTicks = 20L * 60 * 5
+        voteReminder.taskId = plugin.server.scheduler.runTaskTimer(
+            plugin,
+            voteReminder,
+            reminderTicks,
+            reminderTicks,
+        ).taskId
     }
 
     fun stop() {
-        // Tasks handled by Bukkit scheduler lifecycle
+        if (voteReminder.taskId != -1) {
+            plugin.server.scheduler.cancelTask(voteReminder.taskId)
+        }
     }
 }
 
@@ -55,20 +69,24 @@ class ServiceModule(
         VoteConfig()
     }
 
+    val lang: LangService by lazy {
+        LangService(plugin, Locale("en_US"), EnthusiaVotesLang::class.java)
+    }
+
     val votePartySpeaker: VotePartySpeaker by lazy {
         plugin.proxiedDeliveryService ?: NoOpVotePartySpeaker()
     }
 
     val votePartyService: VotePartyService by lazy {
-        VotePartyService(voteConfig, plugin, votePartySpeaker)
+        VotePartyService(voteConfig, plugin, voteRepository, votePartySpeaker)
+    }
+
+    val voteReminder: VoteReminder by lazy {
+        VoteReminder(voteRepository, lang, plugin)
     }
 
     val scheduler: VoteScheduler by lazy {
-        VoteScheduler(plugin, votePartyService, voteConfig)
-    }
-
-    val lang: LangService by lazy {
-        LangService(plugin, Locale("en_US"), EnthusiaVotesLang::class.java)
+        VoteScheduler(plugin, votePartyService, voteConfig, voteReminder)
     }
 
     val rewardService: RewardService by lazy {
@@ -93,14 +111,45 @@ class ServiceModule(
 
     val voteCommand: VoteCommand by lazy { VoteCommand(voteRepository, voteConfig, lang) }
     val voteSitesCommand: VoteSitesCommand by lazy { VoteSitesCommand(voteConfig, lang) }
+    val voteTopCommand: VoteTopCommand by lazy { VoteTopCommand(voteRepository, lang) }
     val evAdminCommand: EVAdminCommand by lazy { EVAdminCommand(votePartyService, voteRepository, lang) }
 
     val voteListener: VotifierVoteListener by lazy {
         VotifierVoteListener(voteService)
     }
 
+    val offlineVoteLoginListener: OfflineVoteLoginListener by lazy {
+        OfflineVoteLoginListener(voteRepository)
+    }
+
+    val voteSignListener: VoteSignListener by lazy {
+        VoteSignListener(voteConfig, lang)
+    }
+
     val placeholderExpansion: EnthusiaVotesExpansion by lazy {
         EnthusiaVotesExpansion(voteRepository, votePartyService)
+    }
+
+    fun resumeGiveawaysOnStartup() {
+        val state = voteRepository.loadPartyState() ?: return
+        if (!state.active) return
+
+        votePartyService.loadFrom(state)
+
+        // Reschedule deactivation based on elapsed time
+        val startedAt = state.startedAt ?: return
+        val elapsed = java.time.Duration.between(startedAt, java.time.Instant.now())
+        val totalDuration = Duration.ofMinutes(voteConfig.votePartyDurationMinutes.toLong())
+        val remaining = totalDuration.minus(elapsed)
+        if (remaining.isPositive) {
+            plugin.server.scheduler.runTaskLater(
+                plugin,
+                Runnable { votePartyService.deactivate() },
+                remaining.seconds * 20,
+            )
+        } else {
+            votePartyService.deactivate()
+        }
     }
 }
 

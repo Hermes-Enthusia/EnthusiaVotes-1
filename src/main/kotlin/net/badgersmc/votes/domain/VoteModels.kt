@@ -32,4 +32,5 @@ data class VotePartyState(
     val currentVotes: Int,
     val threshold: Int,
     val justActivated: Boolean,
+    val startedAt: Instant? = null,
 )

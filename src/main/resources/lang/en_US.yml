@@ -17,6 +17,10 @@ vote:
     site_header: "<shadow:#000000:1><gold>▶</gold> <yellow>Vote Sites</yellow></shadow>"
     site_entry: "<shadow:#000000:1> <gold>▶</gold> <aqua><name></aqua> <gray>- <click:open_url:'<url>'>Click to vote!</click></gray></shadow>"
 
+votetop:
+  header: "<shadow:#000000:1><gold>▶</gold> <yellow>Top Voters</yellow></shadow>"
+  entry: "<shadow:#000000:1> <gray><rank>.</gray> <white><uuid></white> <gray><votes> votes (streak: <streak>)</gray></shadow>"
+
 votesites:
   header: "<shadow:#000000:1><gold>▶</gold> <yellow>Vote for us!</yellow></shadow>"
   site_entry: "<shadow:#000000:1> <gold>▶</gold> <aqua><name></aqua> <gray>- <click:open_url:'<url>'>Click to vote!</click></gray></shadow>"
@@ -45,6 +49,12 @@ bedrock:
     title: "Vote for EnthusiaSMP!"
     content: "Your Stats:\n  Total Votes: <total>\n  Current Streak: <streak>\n  Best Streak: <best>\n\nTap a site below to get the link.\n(Bedrock can't open links — copy it!)"
     link_message: "<shadow:#000000:1><gold><name>:</gold> <white><url></white></shadow>"
+
+sign:
+  created: "<shadow:#000000:1><green>Vote sign created for <site>!</green></shadow>"
+  removed: "<shadow:#000000:1><gray>Vote sign for <site> removed.</gray></shadow>"
+  invalid_site: "<red>Invalid vote site! Use /votesites to see available sites.</red>"
+  url: "<shadow:#000000:1><gold><name>:</gold> <white><url></white></shadow>"
 
 error:
   players_only: "<red>Only players can use this command.</red>"

@@ -6,6 +6,7 @@ import net.badgersmc.votes.domain.VoteParty
 import net.badgersmc.votes.domain.VoteRecord
 import net.badgersmc.votes.infrastructure.config.VoteConfig
 import net.kyori.adventure.text.Component
+import org.bukkit.Bukkit
 import java.util.UUID
 
 class VoteService(
@@ -30,7 +31,12 @@ class VoteService(
         )
         repo.saveVote(record)
 
-        goldDelivery.deliver(playerUuid, gold)
+        val player = Bukkit.getPlayer(playerUuid)
+        if (player != null) {
+            goldDelivery.deliver(playerUuid, gold)
+        } else {
+            repo.queueOfflineGold(playerUuid, gold)
+        }
 
         // VoteParty: check if party just activated
         val partyState = votePartyService.onVote()

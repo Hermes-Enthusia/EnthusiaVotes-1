@@ -2,6 +2,7 @@ package net.badgersmc.votes.infrastructure.persistence
 
 import net.badgersmc.votes.application.VoteRepository
 import net.badgersmc.votes.domain.PlayerStats
+import net.badgersmc.votes.domain.VotePartyState
 import net.badgersmc.votes.domain.VoteRecord
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -90,5 +91,65 @@ class SqliteVoteRepository(
         val last = existing.lastVoteAt ?: return 1
         val hoursSince = java.time.Duration.between(last, now).toHours()
         return if (hoursSince in 1..36) existing.currentStreak + 1 else 1
+    }
+
+    override fun queueOfflineGold(uuid: UUID, gold: Int) {
+        transaction(db) {
+            SchemaUtils.createMissingTablesAndColumns(OfflineVoteTable)
+            val existing = OfflineVoteTable.selectAll()
+                .where { OfflineVoteTable.playerUuid eq uuid.toString() }
+                .singleOrNull()
+            if (existing != null) {
+                OfflineVoteTable.update({ OfflineVoteTable.playerUuid eq uuid.toString() }) {
+                    it[this.gold] = existing[OfflineVoteTable.gold] + gold
+                    it[createdAt] = System.currentTimeMillis()
+                }
+            } else {
+                OfflineVoteTable.insert {
+                    it[playerUuid] = uuid.toString()
+                    it[this.gold] = gold
+                    it[createdAt] = System.currentTimeMillis()
+                }
+            }
+        }
+    }
+
+    override fun getPendingOfflineGold(uuid: UUID): List<Int> = transaction(db) {
+        OfflineVoteTable.selectAll()
+            .where { OfflineVoteTable.playerUuid eq uuid.toString() }
+            .orderBy(OfflineVoteTable.createdAt)
+            .map { it[OfflineVoteTable.gold] }
+    }
+
+    override fun clearOfflineGold(uuid: UUID) {
+        transaction(db) {
+            OfflineVoteTable.deleteWhere { OfflineVoteTable.playerUuid eq uuid.toString() }
+        }
+    }
+
+    override fun savePartyState(state: VotePartyState) {
+        transaction(db) {
+            SchemaUtils.createMissingTablesAndColumns(VoteTable, PlayerStatsTable, VotePartyTable)
+            VotePartyTable.deleteAll()
+            VotePartyTable.insert {
+                it[active] = state.active
+                it[currentVotes] = state.currentVotes
+                it[threshold] = state.threshold
+                it[startedAt] = state.startedAt?.epochSecond
+            }
+        }
+    }
+
+    override fun loadPartyState(): VotePartyState? = transaction(db) {
+        SchemaUtils.createMissingTablesAndColumns(VoteTable, PlayerStatsTable, VotePartyTable)
+        VotePartyTable.selectAll().singleOrNull()?.let { row ->
+            VotePartyState(
+                active = row[VotePartyTable.active],
+                currentVotes = row[VotePartyTable.currentVotes],
+                threshold = row[VotePartyTable.threshold],
+                justActivated = false,
+                startedAt = row[VotePartyTable.startedAt]?.let { Instant.ofEpochSecond(it) },
+            )
+        }
     }
 }
