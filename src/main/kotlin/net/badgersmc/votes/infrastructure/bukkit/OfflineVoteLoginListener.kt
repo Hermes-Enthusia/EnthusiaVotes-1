@@ -27,6 +27,6 @@ class OfflineVoteLoginListener(
         goldDelivery.deliver(uuid, pendingGold)
         voteRepository.clearOfflineGold(uuid)
 
-        player.sendMessage(lang.msg("voteparty.offline_delivery", "gold" to pendingGold.toString()))
+        player.sendMessage(lang.msg("voteparty.offline_delivery", "amount" to pendingGold.toString()))
     }
 }
