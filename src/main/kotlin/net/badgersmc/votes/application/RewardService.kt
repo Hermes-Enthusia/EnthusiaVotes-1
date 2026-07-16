@@ -41,9 +41,10 @@ class RewardService(
         streak: Int,
         serviceName: String,
     ): Component {
-        val streakText = if (streak > 1)
+        // Use empty string for streak_text when no streak — Component.empty() breaks MiniMessage parsing
+        val streakText: Any = if (streak > 1)
             lang.msg("voteparty.streak_suffix", "streak" to streak.toString())
-        else Component.empty()
+        else ""
         return lang.msg(
             "voteparty.reward_message",
             "player" to playerName,
