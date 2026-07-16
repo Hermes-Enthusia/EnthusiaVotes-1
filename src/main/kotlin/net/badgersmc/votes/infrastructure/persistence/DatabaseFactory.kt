@@ -98,11 +98,11 @@ object VotePartyTable : Table("vote_party") {
 
 object Migrations {
     fun run(database: Database) {
-        // Create all tables up front so hot paths don't run schema checks
         transaction(database) {
-            SchemaUtils.createMissingTablesAndColumns(
-                VoteTable, PlayerStatsTable, OfflineVoteTable, VotePartyTable,
-            )
+            // Use create (IF NOT EXISTS) instead of createMissingTablesAndColumns —
+            // SQLite doesn't support ALTER TABLE MODIFY COLUMN, so schema migration
+            // must be done manually (or delete votes.db for a clean slate).
+            SchemaUtils.create(VoteTable, PlayerStatsTable, OfflineVoteTable, VotePartyTable)
         }
     }
 }
